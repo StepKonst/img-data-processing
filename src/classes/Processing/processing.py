@@ -25,6 +25,20 @@ class Processing:
         )
         return shifted_image
 
+    def shift_image_by_constant(self, constant):
+        """
+        Сдвигает изображение на постоянное значение.
+
+        Параметры:
+        constant (int): Значение, на которое следует сдвинуть изображение.
+
+        Возвращает:
+        numpy.ndarray: Массив сдвинутого изображения.
+        """
+        image_array = np.array(self.image)
+        shifted_image = np.clip(image_array + constant, 0, 255).astype(np.uint16)
+        return shifted_image
+
     def multiply_image(self, constant):
         """
         Функция для умножения каждого пикселя изображения на указанную константу.
@@ -36,19 +50,7 @@ class Processing:
         Returns:
         PIL.Image: Умноженное изображение.
         """
-        # Преобразуем изображение в массив numpy для ускорения операций
-        # В numpy массиве каждый элемент представляет один пиксель изображения
         image_array = np.array(self.image)
-
-        # Умножаем каждый пиксель на константу
-        # Для умножения используется операция элементного умножения
-        # В numpy умножение * выполняется для элементов массивов
-        multiplied_image_array = image_array * constant
-
-        # Создаем новое изображение на основе умноженного массива
-        # В numpy массив можно преобразовать обратно в изображение с помощью функции fromarray
-        # В аргументах функции из массива создается изображение с типом пикселей uint8
-        # Тип пикселей uint8 (8 бит) обязателен, так как numpy массив может содержать значения в диапазоне от 0 до 255
-        multiplied_image = Image.fromarray(multiplied_image_array.astype("uint8"))
+        multiplied_image = np.clip(image_array * constant, 0, 255).astype(np.uint16)
 
         return multiplied_image

@@ -43,6 +43,13 @@ def main():
 
     st.divider()
 
+    st.markdown("#### Прибавление константы:")
+    constant = st.slider("Константа", min_value=0, max_value=255, value=30)
+    added_image = processing.shift_image_by_constant(constant)
+    st.image(added_image, use_column_width=True)
+
+    st.divider()
+
     st.markdown("#### Умножение изображения:")
     constant = st.slider("Константа", min_value=0.1, max_value=2.0, value=1.3)
     multiplied_image = processing.multiply_image(constant)
