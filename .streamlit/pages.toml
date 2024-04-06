@@ -1,0 +1,14 @@
+[[pages]]
+path = "src/main.py"
+name = "Главная"
+icon = "🏠"
+
+[[pages]]
+name = "Изображения"
+icon = "🌄"
+is_section = true
+
+[[pages]]
+path = "src/pages/visualization.py"
+name = "Визуализация"
+icon = "🖼️"
