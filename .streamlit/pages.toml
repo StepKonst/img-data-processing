@@ -10,5 +10,10 @@ is_section = true
 
 [[pages]]
 path = "src/pages/visualization.py"
-name = "Визуализация"
+name = "Визуализация изображений"
 icon = "🖼️"
+
+[[pages]]
+path = "src/pages/xray_image_visualization.py"
+name = "Визуализация рентгеновских изображений"
+icon = "🩻"
