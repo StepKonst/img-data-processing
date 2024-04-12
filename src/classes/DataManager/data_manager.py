@@ -1,5 +1,4 @@
 import io
-import os
 import sys
 
 import cv2
@@ -136,79 +135,55 @@ class DataManager:
                 # Преобразуем данные в шкалу серости
                 normalized_image = self.normalize_image(image_data)
 
-                return Image.fromarray(normalized_image.astype(np.uint8))
+                return normalized_image.astype(np.uint8)
             except Exception as e:
                 st.error(f"Failed to process XCR image: {e}")
         else:
             st.error("Пожалуйста, загрузите изображение с расширением .xcr.")
             sys.exit(1)
 
-    def write_to_bin_file(self, data, file_path):
+    def write_to_xcr_file(self, data: np.ndarray):
         """
-        Записывает данные в бинарный файл с заданным путем.
+        Создает файл формата .xcr в памяти и предоставляет его для скачивания через Streamlit.
         """
-        try:
-            # Преобразуем данные к uint8 для сохранения
-            data.astype(np.uint8).tofile(file_path)
-            return True
-        except Exception as e:
-            st.error(f"Failed to write to binary file: {e}")
-            return False
+        # Преобразуем данные обратно в байты, переставляя младший и старший байты
+        data = ((data.astype(np.uint16) & 0xFF) << 8) | (data.astype(np.uint16) >> 8)
+        # Создаем файл в памяти
+        xcr_file = io.BytesIO()
+        # Пропускаем заголовок (2048 байт)
+        xcr_file.write(b"\x00" * 2048)
+        # Записываем данные
+        xcr_file.write(data.tobytes())
+        # Перемещаем указатель в начало файла
+        xcr_file.seek(0)
 
-    def write_to_xcr_file(self, data, file_path):
+        return xcr_file
+
+    def read_binary_file(self):
         """
-        Записывает данные в файл с форматом .xcr.
+        Чтение бинарного файла и возврат его в виде массива NumPy с указанной формой
         """
-        try:
-            # Преобразуем данные обратно в байты (переставляя младший и старший байты)
-            data = ((data & 0xFF) << 8) | (data >> 8)
-
-            # Записываем данные в файл с учетом формата .xcr
-            with open(file_path, "w+b") as file:
-                # Пропуск заголовка (2048 байт)
-                file.seek(2048)
-                # Запись данных
-                data.astype(np.uint16).tofile(file)
-
-            return True
-        except Exception as e:
-            st.error(f"Failed to write to XCR file: {e}")
-            return False
-
-    def download_image(self, image, file_format):
-        """
-        Скачивает изображение в указанном формате в корень проекта.
-
-        Параметры:
-            image (PIL.Image.Image или np.ndarray): Изображение для скачивания.
-            file_format (str): Формат файла для скачивания ('bin' или 'xcr').
-        """
-        if file_format == "bin":
-            # Создаем имя файла для сохранения
-            file_name = "image.bin"
-            # Записываем изображение в бинарный файл
-            success = self.write_to_bin_file(np.array(image), file_name)
-        elif file_format == "xcr":
-            # Создаем имя файла для сохранения
-            file_name = "image.xcr"
-            # Записываем изображение в файл формата XCR
-            success = self.write_to_xcr_file(np.array(image), file_name)
-        else:
-            st.error("Неподдерживаемый формат файла.")
-            return
-
-        if success:
-            st.success(
-                f"Изображение успешно скачано в формате {file_format} в корень проекта."
-            )
-        else:
-            st.error("Ошибка при сохранении изображения.")
-
-        # Меняем путь файла на абсолютный путь в корень проекта
-        file_path = os.path.join(os.getcwd(), file_name)
-
-        # Указываем путь файла для скачивания
-        st.markdown(
-            f'<a href="{file_path}" download="{file_name}">Скачать изображение</a>',
-            unsafe_allow_html=True,
+        uploaded_file = st.file_uploader(
+            "Загрузите изображение",
+            type=["bin"],
         )
+        if uploaded_file is not None:
+            try:
+                file_bytes = uploaded_file.read()
+                image_data = np.frombuffer(file_bytes, dtype=np.uint8)
+                return image_data.reshape((1024, 1024))
+            except Exception as e:
+                st.error(f"Failed to read binary file: {e}")
+        else:
+            st.error("Пожалуйста, загрузите изображение с расширением .bin.")
+            sys.exit(1)
+
+    def write_to_binary_file(self, data: np.ndarray):
+        """
+        Создает файл формата .bin в памяти и предоставляет его для скачивания через Streamlit.
+        """
+        binary_file = io.BytesIO()
+        binary_file.write(data.tobytes())
+        binary_file.seek(0)
+
+        return binary_file

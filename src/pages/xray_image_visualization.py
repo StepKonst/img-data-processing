@@ -2,6 +2,7 @@ import os
 import sys
 
 import streamlit as st
+from PIL import Image
 from st_pages import add_page_title, show_pages_from_config
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
@@ -39,7 +40,8 @@ def main():
     st.markdown("#### Считывание рентгеноувского изображения:")
     xray = datamanager.read_xcr_image()
     st.image(xray, use_column_width=True)
-    xray_width, xray_height = datamanager.get_image_size(image=xray)
+
+    xray_width, xray_height = datamanager.get_image_size(image=Image.fromarray(xray))
     st.markdown(
         """<div style='text-align: center; border: 1px solid red; padding: 10px;
         '>Ширина изображения: <span style='color:blue;'>{} </span> | Высота изображения:
@@ -48,11 +50,24 @@ def main():
         ),
         unsafe_allow_html=True,
     )
+    st.sidebar.markdown("## Скачивание рентгеноувского изображения:")
+    file_name = st.sidebar.text_input("Введите название скачиваемого изображения", "")
 
-    # Кнопки для скачивания в разных форматах
-    file_format = st.sidebar.selectbox("Выберите формат для скачивания", ["bin", "xcr"])
-    if st.sidebar.button("Скачать изображение"):
-        datamanager.download_image(xray, file_format)
+    xcr_file = datamanager.write_to_xcr_file(xray)
+    st.sidebar.download_button(
+        label="Скачать изображение в формате XCR",
+        data=xcr_file,
+        file_name=f"{file_name}.xcr",
+    )
+    bin_file = datamanager.write_to_binary_file(xray)
+    st.sidebar.download_button(
+        label="Скачать изображение в формате BIN",
+        data=bin_file,
+        file_name=f"{file_name}.bin",
+    )
+
+    xray_bin = datamanager.read_binary_file()
+    st.image(xray_bin, use_column_width=True)
 
 
 if __name__ == "__main__":
