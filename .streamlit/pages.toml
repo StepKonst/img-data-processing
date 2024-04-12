@@ -17,3 +17,8 @@ icon = "🖼️"
 path = "src/pages/xray_image_visualization.py"
 name = "Визуализация рентгеновских изображений"
 icon = "🩻"
+
+[[pages]]
+path = "src/pages/increase_size.py"
+name = "Изменение размеров изображений"
+icon = "🧐"

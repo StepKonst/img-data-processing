@@ -187,3 +187,47 @@ class DataManager:
         binary_file.seek(0)
 
         return binary_file
+
+    def resize_nearest_neighbor(
+        self, image: np.ndarray, scale_factor: float
+    ) -> np.ndarray:
+        """
+        Изменяет размер изображения с использованием метода ближайшего соседа.
+
+        Аргументы:
+            image (np.ndarray): Входное изображение.
+            scale_factor (float): Параметр масштабирования для изображения.
+
+        Возвращает:
+            np.ndarray: Измененное изображение.
+        """
+        new_width: int = int(image.shape[1] * scale_factor)
+        new_height: int = int(image.shape[0] * scale_factor)
+        return cv2.resize(
+            image, (new_width, new_height), interpolation=cv2.INTER_NEAREST
+        )
+
+    def resize_bilinear_interpolation(
+        self, image: np.ndarray, scale_factor: float
+    ) -> np.ndarray:
+        """
+        Изменяет размер изображения с использованием метода билинейной интерполяции.
+
+        Аргументы:
+            image (np.ndarray): Входное изображение.
+            scale_factor (float): Параметр масштабирования для изображения.
+
+        Возвращает:
+            np.ndarray: Измененное изображение.
+        """
+        new_width = int(image.shape[1] * scale_factor)
+        new_height = int(image.shape[0] * scale_factor)
+        return cv2.resize(
+            image, (new_width, new_height), interpolation=cv2.INTER_LINEAR
+        )
+
+    def rotated_image(self, image: Image.Image) -> Image.Image:
+        rotation_angle = st.slider("Choose rotation angle:", -180, 180, 0, 90)
+        rotated_image = image.rotate(rotation_angle, expand=True)
+
+        return rotated_image
