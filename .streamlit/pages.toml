@@ -22,3 +22,8 @@ icon = "🩻"
 path = "src/pages/increase_size.py"
 name = "Изменение размеров изображений"
 icon = "🧐"
+
+[[pages]]
+path = "src/pages/gradational_transformations.py"
+name = "Градационные преобразования"
+icon = "🪄"

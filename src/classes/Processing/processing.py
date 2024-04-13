@@ -54,3 +54,57 @@ class Processing:
         multiplied_image = np.clip(image_array * constant, 0, 255).astype(np.uint16)
 
         return multiplied_image
+
+    def apply_negative(self):
+        """
+        Применяет градационное преобразование для создания негатива изображения.
+
+        Args:
+            image (np.ndarray): Исходное изображение в виде массива значений пикселей.
+
+        Returns:
+            np.ndarray: Негативное изображение в виде массива значений пикселей.
+        """
+        # Получаем максимальное значение в изображении
+        L = np.max(self.image)
+
+        # Создаем негативное изображение
+        negative_image = L - 1 - self.image
+
+        return negative_image
+
+    def apply_gamma_correction(self, gamma=1.0, C=1.0):
+        """
+        Применяет гамма-преобразование к изображению.
+
+        Args:
+            image (np.ndarray): Исходное изображение в виде массива значений пикселей.
+            gamma (float): Параметр гамма для преобразования (по умолчанию 1.0).
+            C (float): Коэффициент масштабирования (по умолчанию 1.0).
+
+        Returns:
+            np.ndarray: Преобразованное изображение.
+        """
+        # Применяем гамма-преобразование к каждому пикселю изображения
+        gamma_corrected_image = C * np.power(self.image, gamma)
+
+        # Ограничиваем значения пикселей в диапазоне от 0 до 255
+        gamma_corrected_image = np.clip(gamma_corrected_image, 0, 255)
+
+        return gamma_corrected_image.astype(np.uint8)
+
+    def apply_logarithmic_transformation(self, C=1.0):
+        """
+        Применяет логарифмическое преобразование к изображению.
+
+        Args:
+            image (np.ndarray): Исходное изображение в виде массива значений пикселей.
+            C (float): Коэффициент масштабирования (по умолчанию 1.0).
+
+        Returns:
+            np.ndarray: Преобразованное изображение.
+        """
+        # Применяем логарифмическое преобразование к каждому пикселю изображения
+        logarithmic_image = C * np.log(self.image + 1)
+
+        return logarithmic_image.astype(np.uint8)
