@@ -12,6 +12,7 @@ class DataManager:
         self.image = None
         self.size = None
 
+    # TODO: добавить в качестве параметра для считывания изображения уникальный ключ
     def read_image(self):
         """
         Функция для чтения изображения из файла, загруженного пользователем через streamlit.

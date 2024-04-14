@@ -108,3 +108,48 @@ class Processing:
         logarithmic_image = C * np.log(self.image + 1)
 
         return logarithmic_image.astype(np.uint8)
+
+    def apply_histogram_equalization(self: np.ndarray) -> np.ndarray:
+        """
+        Применяет гистограммное выравнивание к изображению.
+
+        Args:
+            image (np.ndarray): Исходное изображение в виде массива значений пикселей.
+
+        Returns:
+            np.ndarray: Преобразованное изображение.
+        """
+        # Рассчитываем нормализованную гистограмму
+        hist, bins = np.histogram(self.image.flatten(), bins=256, range=[0, 256])
+        hist_normalized = hist / float(self.image.size)
+
+        return hist_normalized
+
+    @staticmethod
+    def compute_cdf(hist_normalized: np.ndarray) -> np.ndarray:
+        """
+        Рассчитывает функцию распределения (CDF) на основе нормализованной гистограммы.
+
+        Args:
+            hist_normalized (np.ndarray): Нормализованная гистограмма.
+
+        Returns:
+            np.ndarray: Функция распределения.
+        """
+        cdf = hist_normalized.cumsum()
+        return cdf
+
+    def equalize_image(self, cdf: np.ndarray) -> np.ndarray:
+        """
+        Применяет гистограммное выравнивание к изображению.
+
+        Args:
+            cdf (np.ndarray): Функция распределения.
+
+        Returns:
+            np.ndarray: Преобразованное изображение.
+        """
+        # Применяем гистограммное выравнивание
+        equalized_image = (cdf[self.image.flatten()] * 255).astype(np.uint8)
+        equalized_image = equalized_image.reshape(self.image.shape)
+        return equalized_image
