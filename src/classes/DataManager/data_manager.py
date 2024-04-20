@@ -228,7 +228,7 @@ class DataManager:
         )
 
     def rotated_image(self, image: Image.Image) -> Image.Image:
-        rotation_angle = st.slider("Choose rotation angle:", -180, 180, 0, 90)
+        rotation_angle = st.slider("Выберите угол поворота:", -180, 180, 0, 90)
         rotated_image = image.rotate(rotation_angle, expand=True)
 
         return rotated_image
