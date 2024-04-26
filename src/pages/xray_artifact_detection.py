@@ -2,13 +2,13 @@ import os
 import sys
 
 import numpy as np
-import plotly.express as px
 import streamlit as st
 from PIL import Image
 from st_pages import add_page_title, show_pages_from_config
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
+from src.classes import utils
 from src.classes.Analisys.analisys import Analisys
 from src.classes.DataManager.data_manager import DataManager
 from src.classes.Processing.processing import Processing
@@ -18,45 +18,6 @@ show_pages_from_config()
 
 datamanager = DataManager()
 analisys = Analisys()
-
-
-def plot_fourier_spectrum(data, x_label, y_label, color="blue", title=""):
-    fig = px.line(
-        x=data["f"], y=data["|Xn|"], labels={"x": x_label, "y": y_label}, title=title
-    )
-    fig.update_traces(line=dict(color=color, width=2))
-    fig.update_layout(xaxis_title=x_label, yaxis_title=y_label, hovermode="x")
-    st.plotly_chart(fig, use_container_width=True)
-
-
-def plot_autocorrelation(data, x_label, y_label, color="blue"):
-    fig = px.line(
-        x=data.index[1:],
-        y=data["AC"][1:],
-        labels={"x": x_label, "y": y_label},
-    )
-    fig.update_traces(line=dict(color=color, width=2))
-    fig.update_layout(
-        xaxis_title=x_label,
-        yaxis_title=y_label,
-        hovermode="x",
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-
-def plot_cross_correlation(data, x_label, y_label, color="blue"):
-    fig = px.line(
-        x=data.index[1:],
-        y=data["CCF"][1:],
-        labels={"x": x_label, "y": y_label},
-    )
-    fig.update_traces(line=dict(color=color, width=2))
-    fig.update_layout(
-        xaxis_title=x_label,
-        yaxis_title=y_label,
-        hovermode="x",
-    )
-    st.plotly_chart(fig, use_container_width=True)
 
 
 def main():
@@ -82,7 +43,7 @@ def main():
     line = st.slider("Выберите линию:", 1, rot_image.shape[0], 1)
     selected_line = line - 1
     line_spectr = analisys.spectr_fourier(data=rot_image[selected_line], dt=1)
-    plot_fourier_spectrum(
+    utils.plot_fourier_spectrum(
         line_spectr,
         "Частота",
         "Амплитуда",
@@ -92,7 +53,7 @@ def main():
 
     derivative_line = processing.compute_derivative(rot_image[selected_line])
     line_spectr = analisys.spectr_fourier(data=derivative_line, dt=1)
-    plot_fourier_spectrum(
+    utils.plot_fourier_spectrum(
         line_spectr,
         "Частота",
         "Амплитуда",
@@ -102,9 +63,11 @@ def main():
 
     st.markdown("#### АКФ производной линии:")
     acf = analisys.acf(derivative_line)
-    plot_autocorrelation(acf.set_index("L"), "Время", "Значение автокорреляции", "blue")
+    utils.plot_autocorrelation(
+        acf.set_index("L"), "Время", "Значение автокорреляции", "blue"
+    )
     acf_spectr = analisys.spectr_fourier(data=acf["AC"], dt=1)
-    plot_fourier_spectrum(
+    utils.plot_fourier_spectrum(
         acf_spectr,
         "Частота",
         "Амплитуда",
@@ -129,9 +92,9 @@ def main():
     derivative_line_2 = processing.compute_derivative(rot_image[line + ds])
     cross_corr = analisys.ccf(derivative_line, derivative_line_2)
     st.markdown("#### График кроскорреляции")
-    plot_cross_correlation(cross_corr, "Время", "Значение кроскорреляции", "blue")
+    utils.plot_cross_correlation(cross_corr, "Время", "Значение кроскорреляции", "blue")
     ccf_spectr = analisys.spectr_fourier(data=cross_corr["CCF"], dt=1)
-    plot_fourier_spectrum(
+    utils.plot_fourier_spectrum(
         ccf_spectr,
         "Частота",
         "Амплитуда",
@@ -200,7 +163,7 @@ def main():
         normalized_filtered_image[selected_line]
     )
     filtered_spectr = analisys.spectr_fourier(data=filtered_derivative_line, dt=1)
-    plot_fourier_spectrum(
+    utils.plot_fourier_spectrum(
         filtered_spectr,
         "Частота",
         "Амплитуда",
