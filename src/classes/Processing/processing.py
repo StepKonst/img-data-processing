@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 from PIL import Image
 
@@ -216,3 +217,48 @@ class Processing:
             for k in range(2 * m + 1)
         ]
         return bsw
+
+    def arithmetic_mean_filter(self, image, kernel_size):
+        # Применяем нулевое дополнение (padding) для обработки краев изображения
+        padded_image = cv2.copyMakeBorder(
+            image,
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size // 2,
+            cv2.BORDER_CONSTANT,
+        )
+        filtered_image = np.zeros_like(image, dtype=np.float32)
+
+        # Проходим по каждому пикселю изображения
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                # Берем окно размера kernel_size x kernel_size вокруг текущего пикселя
+                window = padded_image[i : i + kernel_size, j : j + kernel_size]
+                # Вычисляем среднее значение яркости пикселей в окне
+                filtered_image[i, j] = np.mean(window)
+
+        # Преобразуем результат к типу uint8 и возвращаем
+        return np.uint8(filtered_image)
+
+    def median_filter(self, image, kernel_size):
+        # Применяем нулевое дополнение (padding) для обработки краев изображения
+        padded_image = cv2.copyMakeBorder(
+            image,
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size // 2,
+            kernel_size // 2,
+            cv2.BORDER_CONSTANT,
+        )
+        filtered_image = np.zeros_like(image, dtype=np.uint8)
+
+        # Проходим по каждому пикселю изображения
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                # Берем окно размера kernel_size x kernel_size вокруг текущего пикселя
+                window = padded_image[i : i + kernel_size, j : j + kernel_size]
+                # Вычисляем медианное значение яркости пикселей в окне
+                filtered_image[i, j] = np.median(window)
+
+        return filtered_image
