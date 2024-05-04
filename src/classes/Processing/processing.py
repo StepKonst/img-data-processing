@@ -262,3 +262,135 @@ class Processing:
                 filtered_image[i, j] = np.median(window)
 
         return filtered_image
+
+    @staticmethod
+    def inverseFilter_without_noise(y, h):
+        # Получаем комплексный спектр кардиограммы
+        Y = np.fft.fft(y)
+        # Получаем комплексный спектр функции сердечной мышцы
+        H = np.fft.fft(h)
+        # Выполняем обратную фильтрацию в частотной области
+        X_hat = np.fft.ifft(Y / H)
+        return X_hat.real
+
+    @staticmethod
+    def inverseFilter_with_noise(y, h, alpha):
+        # Получаем комплексный спектр кардиограммы
+        Y = np.fft.fft(y)
+        # Получаем комплексный спектр функции сердечной мышцы
+        H = np.fft.fft(h)
+        # Вычисляем комплексно-сопряженный спектр функции сердечной мышцы
+        H_conj = np.conj(H)
+        # Вычисляем модуль квадрата комплексного спектра функции сердечной мышцы
+        H_sq_abs = np.abs(H) ** 2
+        # Добавляем регуляризацию
+        regularization = alpha**2
+        # Выполняем обратную фильтрацию с учетом шума
+        X_hat = np.fft.ifft(Y * H_conj / (H_sq_abs + regularization))
+        return X_hat.real
+
+    @staticmethod
+    def inverse_filter_without_noise(
+        image: np.ndarray, kernel: np.ndarray
+    ) -> np.ndarray:
+        """
+        Функция для выполнения построчной обратной фильтрации смазанных изображений без шума.
+
+        Args:
+            image (np.ndarray): Искаженное изображение.
+            kernel (np.ndarray): Ядро функции искажения.
+
+        Returns:
+            np.ndarray: Восстановленное изображение.
+        """
+        # Расширяем размерность ядра функции искажения до соответствующих размеров изображения
+        kernel_padded = np.pad(
+            kernel, ((0, 0), (0, image.shape[1] - kernel.shape[1])), mode="constant"
+        )
+
+        # Вычисляем комплексный спектр строки искаженного изображения
+        G = np.fft.fft(image, axis=1)
+
+        # Вычисляем комплексный спектр функции искажения
+        H = np.fft.fft(kernel_padded, axis=1)
+
+        # Выполняем построчную обратную фильтрацию для устранения искажений без шума
+        X_hat = G / H
+
+        # Выполняем обратное преобразование Фурье для получения восстановленного изображения
+        restored_image = np.fft.ifft(X_hat, axis=1).real
+
+        # Нормализуем значения восстановленного изображения к диапазону [0, 1]
+        restored_image = (restored_image - np.min(restored_image)) / (
+            np.max(restored_image) - np.min(restored_image)
+        )
+
+        return restored_image
+
+    @staticmethod
+    def inverse_filter_with_noise(
+        image: np.ndarray, kernel: np.ndarray, alpha: float
+    ) -> np.ndarray:
+        """
+        Функция для выполнения построчной обратной фильтрации зашумленных изображений с применением регуляризации.
+
+        Args:
+            image (np.ndarray): Искаженное и зашумленное изображение.
+            kernel (np.ndarray): Ядро функции искажения.
+            alpha (float): Параметр регуляризации.
+
+        Returns:
+            np.ndarray: Восстановленное изображение.
+        """
+        # Расширяем размерность ядра функции искажения до соответствующих размеров изображения
+        kernel_padded = np.pad(
+            kernel, ((0, 0), (0, image.shape[1] - kernel.shape[1])), mode="constant"
+        )
+
+        # Вычисляем комплексный спектр строки искаженного и зашумленного изображения
+        G = np.fft.fft(image, axis=1)
+
+        # Вычисляем комплексный спектр функции искажения
+        H = np.fft.fft(kernel_padded, axis=1)
+
+        # Выполняем построчную обратную фильтрацию для устранения искажений и шума
+        X_hat = G * np.conj(H) / (np.abs(H) ** 2 + alpha**2)
+
+        # Выполняем обратное преобразование Фурье для получения восстановленного изображения
+        restored_image = np.fft.ifft(X_hat, axis=1).real
+
+        # Нормализуем значения восстановленного изображения к диапазону [0, 1]
+        restored_image = (restored_image - np.min(restored_image)) / (
+            np.max(restored_image) - np.min(restored_image)
+        )
+
+        return restored_image
+
+    @staticmethod
+    def inverse_filter_2D(
+        image: np.ndarray, kernel: np.ndarray, alpha: float
+    ) -> np.ndarray:
+        """
+        Функция для выполнения двухмерной обратной фильтрации смазанных изображений.
+
+        Args:
+            image (np.ndarray): Искаженное изображение.
+            kernel (np.ndarray): Ядро функции искажения.
+            alpha (float): Параметр регуляризации.
+
+        Returns:
+            np.ndarray: Восстановленное изображение.
+        """
+        # Вычисляем двумерное обратное преобразование Фурье для искаженного изображения
+        G = np.fft.fft2(image)
+
+        # Вычисляем двумерное обратное преобразование Фурье для ядра функции искажения
+        H = np.fft.fft2(kernel, s=image.shape)
+
+        # Применяем регуляризацию
+        X_hat = G * np.conj(H) / (np.abs(H) ** 2 + alpha**2)
+
+        # Выполняем обратное преобразование Фурье для получения восстановленного изображения
+        restored_image = np.fft.ifft2(X_hat).real
+
+        return restored_image

@@ -46,3 +46,33 @@ class Model:
         harm_data = A0 * np.sin(2 * np.pi * f0 * k * delta_t)
 
         return harm_data
+
+    def descending_exponential_trend(
+        self, n: int, a: float, b: float, dt: float
+    ) -> np.ndarray:
+        k = np.arange(0, n)
+        trend_values = b * np.exp(-a * k * dt)
+        return trend_values
+
+    def multi_model(self, data1: np.ndarray, data2: np.ndarray) -> np.ndarray:
+        min_len = min(len(data1), len(data2))
+        values1 = data1[:min_len]
+        values2 = data2[:min_len]
+        return values1 * values2
+
+    def rhythm(self, N, M, R, Rs):
+        x_t = [
+            random.random() * 2 * Rs + (R - Rs) if i % M == 0 and i != 0 else 0
+            for i in range(N)
+        ]
+        return x_t
+
+    def convolModel(self, first_values, second_values, M):
+        N = min(len(first_values), len(second_values))
+        first_values = first_values[:N]
+        second_values = second_values[:N]
+
+        convolution_data = np.convolve(first_values, second_values)[: N + M - 1]
+        convolution_data = convolution_data[M // 2 : -M // 2]
+
+        return convolution_data

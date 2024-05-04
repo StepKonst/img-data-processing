@@ -1,4 +1,7 @@
+import sys
 from typing import Tuple
+
+import numpy as np
 import plotly.express as px
 import streamlit as st
 
@@ -90,3 +93,54 @@ def plot_line_chart(param1, param2, x_label, y_label, color, width=1):
         hovermode="x",
     )
     st.plotly_chart(fig, use_container_width=True)
+
+
+def get_exponential_trend_data(a: float = 30.0, b: float = 1.0):
+    a_value = st.sidebar.number_input(
+        'Выберите значение "a"',
+        min_value=0.01,
+        max_value=100.0,
+        step=0.01,
+        value=a,
+    )
+    b_value = st.sidebar.number_input(
+        'Выберите значение "b"',
+        min_value=0.01,
+        max_value=100.0,
+        step=0.01,
+        value=b,
+    )
+
+    return a_value, b_value
+
+
+def read_image_from_dat(file_path: str, width: int, height: int) -> np.ndarray:
+    """
+    Функция для чтения изображения из файла формата .dat.
+
+    Args:
+        file_path (str): Путь к файлу .dat.
+        width (int): Ширина изображения.
+        height (int): Высота изображения.
+
+    Returns:
+        image (np.ndarray): Считанное изображение в виде массива numpy.
+    """
+    try:
+        # Считываем данные из файла .dat как одномерный массив float32
+        image_data = np.fromfile(file_path, dtype=np.float32)
+
+        # Проверяем, что количество считанных данных соответствует размерам изображения
+        # assert len(image_data) == width * height, "Неверные размеры изображения"
+
+        if len(image_data) != width * height:
+            st.error("Неверные размеры изображения")
+            sys.exit(1)
+
+        # Преобразуем одномерный массив в двумерный массив, представляющий изображение
+        image = np.reshape(image_data, (height, width))
+
+        return image
+    except Exception as e:
+        print(f"Ошибка при чтении изображения: {e}")
+        return None
