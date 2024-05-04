@@ -37,3 +37,12 @@ class Model:
         data[positions] = values
 
         return data
+
+    def harm(self, N: int, A0: int, f0: int, delta_t: float) -> np.ndarray:
+        if delta_t > 1 / (2 * f0):
+            return None
+
+        k = np.arange(0, N)
+        harm_data = A0 * np.sin(2 * np.pi * f0 * k * delta_t)
+
+        return harm_data

@@ -121,3 +121,31 @@ class Analisys:
         frequencies = np.arange(n) * delta_f
 
         return pd.DataFrame({"f": frequencies, "|Xn|": xn_values[:n]})
+
+    @staticmethod
+    def inverse_fourier(complex_spectrum):
+        # Выполним обратное преобразование Фурье
+        reconstructed_signal = np.fft.ifft(complex_spectrum)
+
+        # Возвращаем результат
+        return reconstructed_signal
+
+    @staticmethod
+    def fourier2D(image: np.ndarray) -> np.ndarray:
+        # Применяем преобразование Фурье для каждой строки изображения
+        fourier_rows = np.fft.fft(image, axis=0)
+
+        # Затем применяем преобразование Фурье для каждого столбца полученной матрицы
+        fourier_2D = np.fft.fft(fourier_rows, axis=1)
+
+        return fourier_2D
+
+    @staticmethod
+    def inverse_fourier2D(complex_spectrum: np.ndarray) -> np.ndarray:
+        # Выполняем обратное преобразование Фурье для каждого столбца полученной матрицы
+        inverse_fourier_rows = np.fft.ifft(complex_spectrum, axis=0)
+
+        # Затем выполняем обратное преобразование Фурье для каждой строки
+        inverse_fourier_2D = np.fft.ifft(inverse_fourier_rows, axis=1)
+
+        return inverse_fourier_2D
