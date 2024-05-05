@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from PIL import Image
+from scipy import fftpack
 
 
 class Processing:
@@ -394,3 +395,31 @@ class Processing:
         restored_image = np.fft.ifft2(X_hat).real
 
         return restored_image
+
+    @staticmethod
+    def resize_image_fourier(image: np.ndarray, scale_factor: float) -> np.ndarray:
+        """
+        Изменяет размер изображения в MxN раз с использованием преобразования Фурье.
+
+        Parameters:
+            image (np.ndarray): Исходное изображение.
+            scale_factor (float): Коэффициент масштабирования.
+
+        Returns:
+            np.ndarray: Измененное изображение.
+        """
+        M, N = image.shape
+        new_M = int(M * scale_factor)
+        new_N = int(N * scale_factor)
+
+        # Прямое 2-D преобразование Фурье
+        fourier_2D = np.fft.fft2(image)
+
+        # Увеличение размеров спектра
+        resized_fourier_2D = np.zeros((new_M, new_N), dtype=fourier_2D.dtype)
+        resized_fourier_2D[: M // 2, : N // 2] = fourier_2D[: M // 2, : N // 2]
+
+        # Обратное 2-D преобразование Фурье
+        resized_image = np.fft.ifft2(resized_fourier_2D).real
+
+        return resized_image
