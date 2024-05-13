@@ -4,6 +4,21 @@ name = "Главная"
 icon = "🏠"
 
 [[pages]]
+name = "Творческое задание"
+icon = "🧑‍🎨"
+is_section = true
+
+[[pages]]
+path = "src/creative_challenge/mri-image-processing.py"
+name = "Работа с МРТ"
+icon = "🔨"
+
+[[pages]]
+name = "Лабораторные работы"
+icon = "👨‍🔬"
+is_section = true
+
+[[pages]]
 path = "src/pages/visualization.py"
 name = "Визуализация изображений"
 icon = "🖼️"
