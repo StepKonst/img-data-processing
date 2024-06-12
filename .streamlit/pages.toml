@@ -14,6 +14,11 @@ name = "Работа с МРТ"
 icon = "🔨"
 
 [[pages]]
+name = "Подсчет камней"
+path = "src/creative_challenge/stones.py"
+icon = "🗿"
+
+[[pages]]
 name = "Лабораторные работы"
 icon = "👨‍🔬"
 is_section = true
