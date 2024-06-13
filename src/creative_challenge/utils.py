@@ -201,3 +201,25 @@ def filter_with_gradient(image):
     filtered_image = filtered_image.astype(np.uint8)
 
     return filtered_image
+
+
+def segment_image(image):
+    # Простая сегментация с использованием порогового значения
+    threshold = np.mean(image) + np.std(image)
+    segmented_image = (image > threshold).astype(np.uint8) * 255
+    return segmented_image
+
+
+def optimize_brightness_contrast(segmented_image, original_image):
+    mask = segmented_image > 0
+    mean_intensity = np.mean(original_image[mask])
+    std_intensity = np.std(original_image[mask])
+
+    # Оптимизация контрастности
+    optimized_image = original_image.copy()
+    optimized_image[mask] = (
+        original_image[mask] - mean_intensity
+    ) / std_intensity * 64 + 128
+    optimized_image = np.clip(optimized_image, 0, 255).astype(np.uint8)
+
+    return optimized_image

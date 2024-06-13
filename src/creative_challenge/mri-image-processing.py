@@ -1,13 +1,8 @@
-import os
-import sys
-
 import numpy as np
 import streamlit as st
 from st_pages import add_page_title, show_pages_from_config
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-
-from src.creative_challenge import utils
+from creative_challenge import utils
 
 
 def main():
@@ -18,9 +13,10 @@ def main():
         width, height = utils.extract_dimension_from_filename(bin_file.name)
         image_data = utils.read_binary_file(bin_file, width, height)
         image_data = utils.normalize_image(image_data).astype(np.uint8)
+
         st.subheader("Исходное изображение:")
         st.image(image_data, use_column_width=True)
-        background_color = "#f3f3f360"
+
         st.markdown(
             f"""
             <div style='
@@ -31,7 +27,7 @@ def main():
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             margin: 10px 0;
-            background-color: {background_color};
+            background-color: #f3f3f360;
             '>
             Ширина изображения: <span style='color: {'#304FFE' if st.get_option("theme.secondaryBackgroundColor") == "#f3f3f3" else "#00C853"};'>{width}</span> | 
             Высота изображения: <span style='color: {'#304FFE' if st.get_option("theme.secondaryBackgroundColor") == "#f3f3f3" else "#00C853"};'>{height}</span>
@@ -40,74 +36,60 @@ def main():
             unsafe_allow_html=True,
         )
 
-        hist_normalized = utils.apply_histogram_equalization(image_data)
-        fig = utils.plot_histogram(hist_normalized)
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown(
+            """
+            ### Шаг 1: Сегментация изображения
+            Мы используем пороговое значение для сегментации изображения. Порог рассчитывается как сумма среднего значения и стандартного отклонения яркости пикселей.
+            ```python
+            def segment_image(image):
+                threshold = np.mean(image) + np.std(image)
+                segmented_image = (image > threshold).astype(np.uint8) * 255
+                return segmented_image
+            ```
+            Возможные артефакты могут появляться из-за шумов или перепадов яркости на краях изображения.
+            """
+        )
+        segmented_image = utils.segment_image(image_data)
+        st.subheader("Сегментированное изображение:")
+        st.image(segmented_image, use_column_width=True)
 
-        st.divider()
-        st.subheader("Пересчет яркостей:")
-        # cdf = utils.compute_cdf(hist_normalized)
-        # equalized_image = utils.equalize_image(image_data, cdf)
-        equalized_image = utils.adjust_brightness_contrast(image_data)
-        equalized_normalized = utils.apply_histogram_equalization(equalized_image)
-        fig = utils.plot_histogram(equalized_normalized)
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown(
+            """
+            ### Шаг 2: Оптимизация яркости и контрастности
+            На основе сегментированного изображения мы настраиваем яркость и контрастность в областях интереса.
+            ```python
+            def optimize_brightness_contrast(segmented_image, original_image):
+                mask = segmented_image > 0
+                mean_intensity = np.mean(original_image[mask])
+                std_intensity = np.std(original_image[mask])
+                
+                optimized_image = original_image.copy()
+                optimized_image[mask] = (original_image[mask] - mean_intensity) / std_intensity * 64 + 128
+                optimized_image = np.clip(optimized_image, 0, 255).astype(np.uint8)
+                
+                return optimized_image
+            ```
+            Когда используется простой порог для сегментации, это может привести к тому, что некоторые шумы или артефакты, 
+            имеющие интенсивность выше порогового значения, будут включены в сегментированное изображение. 
+            Это может создавать нежелательные градиенты и помехи на краях.
+            """
+        )
+        optimized_image = utils.optimize_brightness_contrast(
+            segmented_image, image_data
+        )
         st.subheader("Преобразованное изображение:")
-        st.image(equalized_image, use_column_width=True)
+        st.image(optimized_image, use_column_width=True)
 
-        st.divider()
-        filter_type = st.selectbox(
-            "Выберите фильтр для подавления шума",
-            ["Медианный Фильтр", "Усредняющий Арифметический Фильтр"],
+        st.markdown(
+            """
+            ### Шаг 3: Результаты
+            Мы выводим итоговое изображение после оптимизации яркости и контрастности. В случае появления артефактов на краях, можно использовать предварительную фильтрацию.
+            """
         )
 
-        match filter_type:
-            case "Усредняющий Арифметический Фильтр":
-                mask_size = st.slider("Размер маски", 1, 15, 3)
-                filtered_image = utils.arithmetic_mean_filter(
-                    equalized_image, mask_size
-                )
-            case "Медианный Фильтр":
-                mask_size = st.slider("Размер маски", 1, 15, 5)
-                filtered_image = utils.median_filter(equalized_image, mask_size)
-            case _:
-                raise ValueError("Unknown filter type selected")
-        st.subheader("Отфильтрованное изображение:")
-        st.image(filtered_image, use_column_width=True)
-
-        state = st.toggle("Использовать повторно фильтр", True)
-        if state:
-            filter_type = st.selectbox(
-                "Выберите фильтр для подавления шума",
-                ["Усредняющий Арифметический Фильтр", "Медианный Фильтр"],
-                key="filter_type",
-            )
-
-            match filter_type:
-                case "Усредняющий Арифметический Фильтр":
-                    mask_size = st.slider("Размер маски", 1, 15, 3, key="mask_size")
-                    filtered_image = utils.arithmetic_mean_filter(
-                        filtered_image, mask_size
-                    )
-                case "Медианный Фильтр":
-                    mask_size = st.slider("Размер маски", 1, 15, 3, key="mask_size")
-                    filtered_image = utils.median_filter(filtered_image, mask_size)
-                case _:
-                    raise ValueError("Unknown filter type selected")
-
-            st.subheader("Отфильтрованное изображение с помощью двух фильтров:")
-            st.image(filtered_image, use_column_width=True)
-
-        st.divider()
-        st.subheader("Отфильтрованное изображение с помощью градиента:")
-        new_image = utils.filter_with_gradient(filtered_image)
-        st.image(new_image, use_column_width=True)
-
-        st.subheader("Пробуем построить разностное изображение")
-
-        test_image = utils.compare_images(equalized_image, new_image)
-        # test_image = utils.compare_images(image_data, new_image)
-        st.image(test_image, use_column_width=True)
+        equalized_image = utils.adjust_brightness_contrast(optimized_image)
+        st.subheader("Итоговое изображение:")
+        st.image(equalized_image, use_column_width=True)
 
 
 add_page_title()
